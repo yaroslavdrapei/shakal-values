@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from './infrastructure/config/config.module';
-import { DrizzleModule } from './infrastructure/drizzle/drizzle.module';
-import { RedisModule } from './infrastructure/redis/redis.module';
+import { ConfigModule } from '@infrastructure/config/config.module';
+import { DrizzleModule } from '@infrastructure/drizzle/drizzle.module';
+import { RedisModule } from '@infrastructure/redis/redis.module';
+import { ItemModule } from '@modules/item/item.module';
+import { MapperModule } from '@modules/mapper/mapper.module';
 
 @Module({
-  imports: [ConfigModule, DrizzleModule, RedisModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [ConfigModule, DrizzleModule, RedisModule, MapperModule, ItemModule],
 })
 export class AppModule {}

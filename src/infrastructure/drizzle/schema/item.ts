@@ -17,7 +17,7 @@ export const item = pgTable('item', {
   type: itemType('type').$type<ItemType>().notNull(),
   origin: varchar('origin', { length: 70 }).notNull(),
   category: itemCategory('category').$type<ItemCategory>().notNull(),
-  class: itemType('class').$type<ItemType>().notNull(),
+  class: itemType('class').$type<ItemType>(),
 
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

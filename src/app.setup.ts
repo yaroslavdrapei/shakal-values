@@ -11,6 +11,8 @@ export const setup = async (app: INestApplication) => {
     }),
   );
 
+  app.setGlobalPrefix('api');
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Shakal Values service')
     .setDescription('The shakal values service API description')

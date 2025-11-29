@@ -1,6 +1,6 @@
 {
-  "id": "5f11e2c0-4f6a-4fe0-85df-ea8d7e675e0e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "7593c720-39c2-48cf-9521-2acde9b80631",
+  "prevId": "5f11e2c0-4f6a-4fe0-85df-ea8d7e675e0e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -140,15 +140,15 @@
         "item_values_item_id_item_id_fk": {
           "name": "item_values_item_id_item_id_fk",
           "tableFrom": "item_values",
-          "tableTo": "item",
           "columnsFrom": [
             "item_id"
           ],
+          "tableTo": "item",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -212,10 +212,10 @@
     }
   },
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

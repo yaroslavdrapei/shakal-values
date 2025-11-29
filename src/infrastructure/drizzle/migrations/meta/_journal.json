@@ -5,8 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1764432230231,
-      "tag": "0000_spicy_demogoblin",
+      "when": 1764439360169,
+      "tag": "0000_workable_nextwave",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764440119789,
+      "tag": "0001_seed_items",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764441199571,
+      "tag": "0002_seed_supreme_values",
       "breakpoints": true
     }
   ]

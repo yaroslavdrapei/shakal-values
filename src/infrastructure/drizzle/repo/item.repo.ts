@@ -1,7 +1,10 @@
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { PostgresDatabase } from '../drizzle.types';
-import { item } from '../schema';
+import { item, itemValues } from '../schema';
 import { eq } from 'drizzle-orm';
+import { ItemValuesSelectModel } from './item-values.repo';
+import { Inject } from '@nestjs/common';
+import { POSTGRES_CONNECTION } from '../drizzle.constants';
 
 export type ItemSelectModel = InferSelectModel<typeof item>;
 export type ItemInsertModel = InferInsertModel<typeof item>;
@@ -9,12 +12,40 @@ export type ItemUpdateModel = Omit<
   ItemInsertModel,
   'id' | 'createdAt' | 'updatedAt'
 >;
+export type ItemWithValuesSelectModel = ItemSelectModel & {
+  values: Pick<
+    ItemValuesSelectModel,
+    'value' | 'stability' | 'demand' | 'rarity'
+  > | null;
+};
 
 export class ItemRepo {
-  constructor(private readonly postgres: PostgresDatabase) {}
+  constructor(
+    @Inject(POSTGRES_CONNECTION)
+    private readonly postgres: PostgresDatabase,
+  ) {}
 
   async findAll(): Promise<ItemSelectModel[]> {
     return this.postgres.select().from(item);
+  }
+
+  async findAllWithValues(): Promise<ItemWithValuesSelectModel[]> {
+    const result = await this.postgres
+      .select()
+      .from(item)
+      .leftJoin(itemValues, eq(item.id, itemValues.itemId));
+
+    return result.map((item) => ({
+      ...item.item,
+      values: item.item_values
+        ? {
+            value: item.item_values?.value,
+            stability: item.item_values?.stability,
+            demand: item.item_values?.demand,
+            rarity: item.item_values?.rarity,
+          }
+        : null,
+    }));
   }
 
   async findById(id: ItemSelectModel['id']): Promise<ItemSelectModel | null> {

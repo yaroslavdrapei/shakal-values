@@ -3,6 +3,8 @@ import { PostgresDatabase } from '../drizzle.types';
 import { itemValues } from '../schema';
 import { eq, and } from 'drizzle-orm';
 import { ItemSelectModel } from './item.repo';
+import { POSTGRES_CONNECTION } from '../drizzle.constants';
+import { Inject } from '@nestjs/common';
 
 export type ItemValuesSelectModel = InferSelectModel<typeof itemValues>;
 export type ItemValuesInsertModel = InferInsertModel<typeof itemValues>;
@@ -12,7 +14,10 @@ export type ItemValuesUpdateModel = Omit<
 >;
 
 export class ItemValuesRepo {
-  constructor(private readonly postgres: PostgresDatabase) {}
+  constructor(
+    @Inject(POSTGRES_CONNECTION)
+    private readonly postgres: PostgresDatabase,
+  ) {}
 
   async findAll(): Promise<ItemValuesSelectModel[]> {
     return this.postgres.select().from(itemValues);

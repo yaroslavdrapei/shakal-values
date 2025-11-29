@@ -8,7 +8,7 @@ CREATE TABLE "item" (
 	"type" "item_type" NOT NULL,
 	"origin" varchar(70) NOT NULL,
 	"category" "item_category" NOT NULL,
-	"class" "item_type" NOT NULL,
+	"class" "item_type",
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
