@@ -2,8 +2,9 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigifyModule } from '@itgorillaz/configify';
 import { DatabaseConfig } from './database.config';
 import { RedisConfig } from './redis.config';
+import { AppConfig } from './app.config';
 
-const providers = [DatabaseConfig, RedisConfig];
+const providers = [AppConfig, DatabaseConfig, RedisConfig];
 
 @Global()
 @Module({
