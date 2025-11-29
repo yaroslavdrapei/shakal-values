@@ -1,10 +1,11 @@
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { PostgresDatabase } from '../drizzle.types';
 import { item, itemValues } from '../schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { ItemValuesSelectModel } from './item-values.repo';
 import { Inject } from '@nestjs/common';
 import { POSTGRES_CONNECTION } from '../drizzle.constants';
+import { ItemSource } from '@modules/item/item.enums';
 
 export type ItemSelectModel = InferSelectModel<typeof item>;
 export type ItemInsertModel = InferInsertModel<typeof item>;
@@ -29,11 +30,18 @@ export class ItemRepo {
     return this.postgres.select().from(item);
   }
 
+  // TODO: inner join instead of left join ???
   async findAllWithValues(): Promise<ItemWithValuesSelectModel[]> {
     const result = await this.postgres
       .select()
       .from(item)
-      .leftJoin(itemValues, eq(item.id, itemValues.itemId));
+      .leftJoin(
+        itemValues,
+        and(
+          eq(item.id, itemValues.itemId),
+          eq(itemValues.source, ItemSource.SUPREME),
+        ),
+      );
 
     return result.map((item) => ({
       ...item.item,

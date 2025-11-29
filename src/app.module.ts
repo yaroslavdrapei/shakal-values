@@ -4,8 +4,18 @@ import { DrizzleModule } from '@infrastructure/drizzle/drizzle.module';
 import { RedisModule } from '@infrastructure/redis/redis.module';
 import { ItemModule } from '@modules/item/item.module';
 import { MapperModule } from '@modules/mapper/mapper.module';
+import { ScraperModule } from '@modules/scraper/scraper.module';
+import { CronModule } from '@modules/cron/cron.module';
 
 @Module({
-  imports: [ConfigModule, DrizzleModule, RedisModule, MapperModule, ItemModule],
+  imports: [
+    ConfigModule,
+    DrizzleModule,
+    RedisModule,
+    MapperModule,
+    ItemModule,
+    ScraperModule,
+    CronModule,
+  ],
 })
 export class AppModule {}

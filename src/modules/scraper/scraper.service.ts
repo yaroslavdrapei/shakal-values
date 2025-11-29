@@ -1,27 +1,44 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { SupremeConfig } from '@infrastructure/config/supreme.config';
 import { JSDOM } from 'jsdom';
-import { FoundItem, isFoundItemTypeGuard } from '../item/item.types';
+import {
+  FoundItem,
+  isFoundItemTypeGuard,
+  validateFoundItem,
+} from '../item/item.types';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, retry, timeout, timer } from 'rxjs';
 import { AxiosError } from 'axios';
 
+// TODO: refactor this shit
 @Injectable()
 export class ScraperService {
   private itemCount = 0;
+  private readonly logger = new Logger(ScraperService.name);
 
   constructor(
     private readonly supremeConfig: SupremeConfig,
     private readonly httpService: HttpService,
-    private readonly logger: Logger = new Logger(ScraperService.name),
   ) {}
 
   public async getChangeLog(): Promise<string> {
     let html: string;
 
     try {
-      const response = await fetch(`${this.supremeConfig.baseUrl}/index.html`);
-      html = await response.text();
+      const observable = this.httpService.get<string>('').pipe(
+        timeout(30000),
+        retry({
+          count: 10,
+          delay: (error, retryCount) => {
+            this.logger.warn(
+              `Attempt for change log failed, (${retryCount}), error: ${(error as AxiosError).message}. Retrying...`,
+            );
+            return timer(2000);
+          },
+        }),
+      );
+      const response = await firstValueFrom(observable);
+      html = response.data;
     } catch (e) {
       this.logger.error(`Error while trying to get change log: \n${e}`);
       throw new BadRequestException('Error while trying to get change log');
@@ -57,19 +74,17 @@ export class ScraperService {
   }
 
   public async getItemsFromPage(page: string): Promise<FoundItem[]> {
-    const url = `${this.supremeConfig.baseUrl}/${page}`;
+    this.logger.log(`Getting items from page: ${page}`);
 
-    this.logger.log(`Getting items from ${url}`);
-
-    const observable = this.httpService.get<string>(`${page}`).pipe(
+    const observable = this.httpService.get<string>(`/${page}`).pipe(
       timeout(30000),
       retry({
-        count: 5,
+        count: 10,
         delay: (error, retryCount) => {
           this.logger.warn(
-            `Attempt ${(error as AxiosError).config?.url as string} (${retryCount}) failed, error: ${(error as AxiosError).message}. Retrying...`,
+            `Attempt for ${page} failed, (${retryCount}), error: ${(error as AxiosError).message}. Retrying...`,
           );
-          return timer(1000);
+          return timer(2000);
         },
       }),
     );
@@ -98,10 +113,12 @@ export class ScraperService {
       const item = { ...otherProps, ...demandAndRarity, type: page };
 
       if (isFoundItemTypeGuard(item)) {
-        result.push(item);
+        const validItem = validateFoundItem(item);
+        if (validItem) result.push(validItem);
       }
     });
 
+    this.logger.log(`Found ${result.length} valid items from ${page}`);
     return result;
   }
 

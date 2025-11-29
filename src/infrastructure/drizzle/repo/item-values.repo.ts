@@ -8,9 +8,11 @@ import { Inject } from '@nestjs/common';
 
 export type ItemValuesSelectModel = InferSelectModel<typeof itemValues>;
 export type ItemValuesInsertModel = InferInsertModel<typeof itemValues>;
-export type ItemValuesUpdateModel = Omit<
-  ItemValuesInsertModel,
-  'id' | 'createdAt' | 'updatedAt'
+export type ItemValuesUpdateModel = Partial<
+  Omit<
+    ItemValuesInsertModel,
+    'id' | 'createdAt' | 'updatedAt' | 'itemId' | 'source'
+  >
 >;
 
 export class ItemValuesRepo {
@@ -51,6 +53,18 @@ export class ItemValuesRepo {
       .update(itemValues)
       .set(data)
       .where(eq(itemValues.id, id))
+      .returning();
+    return result[0] ?? null;
+  }
+
+  async updateByItemId(
+    itemId: ItemSelectModel['id'],
+    data: ItemValuesUpdateModel,
+  ): Promise<ItemValuesSelectModel | null> {
+    const result = await this.postgres
+      .update(itemValues)
+      .set(data)
+      .where(eq(itemValues.itemId, itemId))
       .returning();
     return result[0] ?? null;
   }
