@@ -1,0 +1,224 @@
+{
+  "id": "88955bd1-a590-449d-b2a5-59b5bee0d851",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.item": {
+      "name": "item",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(70)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "item_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origin": {
+          "name": "origin",
+          "type": "varchar(70)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "item_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class": {
+          "name": "class",
+          "type": "item_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.item_values": {
+      "name": "item_values",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "varchar(70)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stability": {
+          "name": "stability",
+          "type": "item_stability",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "demand": {
+          "name": "demand",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rarity": {
+          "name": "rarity",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "item_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "item_values_item_id_item_id_fk": {
+          "name": "item_values_item_id_item_id_fk",
+          "tableFrom": "item_values",
+          "tableTo": "item",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.item_category": {
+      "name": "item_category",
+      "schema": "public",
+      "values": [
+        "SEASON1",
+        "CLASSIC",
+        "HOLIDAY_CHRISTMAS",
+        "HOLIDAY_HALLOWEEN"
+      ]
+    },
+    "public.item_type": {
+      "name": "item_type",
+      "schema": "public",
+      "values": [
+        "ANCIENT",
+        "VINTAGE",
+        "CHROMA",
+        "GODLY",
+        "LEGENDARY",
+        "RARE",
+        "UNCOMMON",
+        "COMMON",
+        "PET",
+        "MISC",
+        "UNIQUE"
+      ]
+    },
+    "public.item_source": {
+      "name": "item_source",
+      "schema": "public",
+      "values": [
+        "SUPREME",
+        "MM2VALUES"
+      ]
+    },
+    "public.item_stability": {
+      "name": "item_stability",
+      "schema": "public",
+      "values": [
+        "RISING",
+        "OVERPAID_FOR",
+        "DOING_WELL",
+        "IMPROVING",
+        "FLUCTUATING",
+        "RECEDING",
+        "STABLE",
+        "UNDERPAID_FOR",
+        "DECREASING",
+        "UNSAFE"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

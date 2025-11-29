@@ -10,6 +10,10 @@ import {
   POSTGRES_CONNECTION,
 } from './drizzle.constants';
 import { PostgresDatabase } from './drizzle.types';
+import { ItemRepo } from './repo/item.repo';
+import { ItemValuesRepo } from './repo/item-values.repo';
+
+const repos = [ItemRepo, ItemValuesRepo];
 
 @Global()
 @Module({
@@ -28,7 +32,8 @@ import { PostgresDatabase } from './drizzle.types';
         return drizzle(client, { schema });
       },
     },
+    ...repos,
   ],
-  exports: [POSTGRES_CONNECTION],
+  exports: [POSTGRES_CONNECTION, ...repos],
 })
 export class DrizzleModule {}
