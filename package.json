@@ -40,9 +40,11 @@
     "fastify-swagger": "^5.2.0",
     "ioredis": "^5.8.2",
     "jsdom": "^27.2.0",
+    "nestjs-telegraf": "^2.9.1",
     "postgres": "^3.4.7",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "telegraf": "^4.16.3",
     "yarn": "^1.22.22"
   },
   "devDependencies": {

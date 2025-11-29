@@ -2,6 +2,7 @@ import { ItemValuesRepo } from '@infrastructure/drizzle/repo/item-values.repo';
 import { ItemRepo } from '@infrastructure/drizzle/repo/item.repo';
 import { RedisService } from '@infrastructure/redis/redis.service';
 import { ScraperService } from '@modules/scraper/scraper.service';
+import { TelegramBotService } from '@modules/telegram/telegram-bot.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { hashString } from '@shared/utils/hash.util';
@@ -14,10 +15,13 @@ export class TasksService {
     private readonly itemRepo: ItemRepo,
     private readonly itemValuesRepo: ItemValuesRepo,
     private readonly redisService: RedisService,
+    private readonly telegramBotService: TelegramBotService,
   ) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)
   async scrapeItemsSupreme() {
+    this.logger.log('Triggering scrape items supreme');
+
     const newChangeLog = await this.scraperService.getChangeLog();
     const newHash = hashString(newChangeLog);
 
@@ -66,5 +70,9 @@ export class TasksService {
     this.logger.log(`Failed to update items: ${failedItems}`);
 
     await this.redisService.set(`change-log-hash-supreme`, newHash);
+
+    await this.telegramBotService.sendMessage(
+      'Values have been updated! Check out the website for the latest information',
+    );
   }
 }

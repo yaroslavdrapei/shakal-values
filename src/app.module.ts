@@ -6,6 +6,7 @@ import { ItemModule } from '@modules/item/item.module';
 import { MapperModule } from '@modules/mapper/mapper.module';
 import { ScraperModule } from '@modules/scraper/scraper.module';
 import { CronModule } from '@modules/cron/cron.module';
+import { TelegramModule } from '@modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CronModule } from '@modules/cron/cron.module';
     ItemModule,
     ScraperModule,
     CronModule,
+    TelegramModule,
   ],
 })
 export class AppModule {}
