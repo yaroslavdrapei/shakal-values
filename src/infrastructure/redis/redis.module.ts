@@ -12,9 +12,9 @@ import { RedisConfig } from '../config/redis.config';
       inject: [RedisConfig],
       useFactory: (config: RedisConfig) => {
         return new Redis({
-          host: config.redisHost,
-          port: config.redisPort,
-          password: config.redisPassword,
+          host: config.host,
+          port: config.port,
+          password: config.password,
         });
       },
     },

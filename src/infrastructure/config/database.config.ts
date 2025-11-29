@@ -5,5 +5,5 @@ import { IsString } from 'class-validator';
 export class DatabaseConfig {
   @Value('DATABASE_URL')
   @IsString()
-  public databaseUrl: string;
+  public url: string;
 }

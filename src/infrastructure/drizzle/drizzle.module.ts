@@ -18,7 +18,7 @@ import { PostgresDatabase } from './drizzle.types';
       provide: POSTGRES_CONNECTION,
       inject: [DatabaseConfig],
       useFactory: (config: DatabaseConfig): PostgresDatabase => {
-        const uri = config.databaseUrl;
+        const uri = config.url;
         const client = postgres(uri, {
           max: 10,
           idle_timeout: IDLE_CONNECTION_TIMEOUT_IN_SECONDS,

@@ -5,13 +5,13 @@ import { IsNumber, IsString } from 'class-validator';
 export class RedisConfig {
   @Value('REDIS_HOST')
   @IsString()
-  public redisHost: string;
+  public host: string;
 
   @Value('REDIS_PORT', { parse: parseInt })
   @IsNumber()
-  public redisPort: number;
+  public port: number;
 
   @Value('REDIS_PASSWORD')
   @IsString()
-  public redisPassword: string;
+  public password: string;
 }
