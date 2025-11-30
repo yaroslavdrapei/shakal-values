@@ -1,15 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Command, Ctx, Update } from 'nestjs-telegraf';
+import { Command, Ctx, On, Update } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { TelegramSubscriberRepo } from '@infrastructure/drizzle/repo/telegram-subscriber.repo';
+import { TradeService } from '@modules/trade/trade.service';
 
 // TODO: use upsert everywhere ???
 @Update()
 @Injectable()
 export class TelegramBotUpdates {
   private readonly logger = new Logger(TelegramBotUpdates.name);
+
   constructor(
     private readonly telegramSubscriberRepo: TelegramSubscriberRepo,
+    private readonly httpService: HttpService,
+    private readonly tradeService: TradeService,
   ) {}
 
   @Command('start')
@@ -95,5 +101,41 @@ export class TelegramBotUpdates {
 /status - Check your subscription status
 /help - Show this help message`,
     );
+  }
+
+  @On('photo')
+  async handleTradeImage(@Ctx() ctx: Context) {
+    if (!ctx.from || !ctx.message) return;
+
+    if ('photo' in ctx.message && ctx.message.photo) {
+      const photo = ctx.message.photo;
+      const largestPhoto = photo[photo.length - 1];
+
+      await ctx.reply('Processing your trade image...');
+
+      try {
+        const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
+
+        const response = await firstValueFrom(
+          this.httpService.get(fileLink.toString(), {
+            responseType: 'arraybuffer',
+          }),
+        );
+
+        const imageBuffer = Buffer.from(response.data);
+        const base64Image = imageBuffer.toString('base64');
+
+        const result = await this.tradeService.evaluateTrade(base64Image);
+
+        await ctx.reply(result);
+      } catch (error) {
+        this.logger.error(
+          `Error processing trade image: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        await ctx.reply(
+          'Sorry, I encountered an error while processing your trade image. Please try again',
+        );
+      }
+    }
   }
 }

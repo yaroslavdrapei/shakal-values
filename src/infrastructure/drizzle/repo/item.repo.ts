@@ -1,4 +1,4 @@
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
+import { inArray, InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { PostgresDatabase } from '../drizzle.types';
 import { item, itemValues } from '../schema';
 import { eq, and } from 'drizzle-orm';
@@ -17,7 +17,7 @@ export type ItemWithValuesSelectModel = ItemSelectModel & {
   values: Pick<
     ItemValuesSelectModel,
     'value' | 'stability' | 'demand' | 'rarity'
-  > | null;
+  >;
 };
 
 export class ItemRepo {
@@ -30,12 +30,11 @@ export class ItemRepo {
     return this.postgres.select().from(item);
   }
 
-  // TODO: inner join instead of left join ???
   async findAllWithValues(): Promise<ItemWithValuesSelectModel[]> {
     const result = await this.postgres
       .select()
       .from(item)
-      .leftJoin(
+      .innerJoin(
         itemValues,
         and(
           eq(item.id, itemValues.itemId),
@@ -45,14 +44,12 @@ export class ItemRepo {
 
     return result.map((item) => ({
       ...item.item,
-      values: item.item_values
-        ? {
-            value: item.item_values?.value,
-            stability: item.item_values?.stability,
-            demand: item.item_values?.demand,
-            rarity: item.item_values?.rarity,
-          }
-        : null,
+      values: {
+        value: item.item_values.value,
+        stability: item.item_values.stability,
+        demand: item.item_values.demand,
+        rarity: item.item_values.rarity,
+      },
     }));
   }
 
@@ -65,6 +62,29 @@ export class ItemRepo {
     return result[0] ?? null;
   }
 
+  async findByNames(names: string[]): Promise<ItemWithValuesSelectModel[]> {
+    const result = await this.postgres
+      .select()
+      .from(item)
+      .where(inArray(item.name, names))
+      .innerJoin(
+        itemValues,
+        and(
+          eq(item.id, itemValues.itemId),
+          eq(itemValues.source, ItemSource.SUPREME),
+        ),
+      );
+
+    return result.map((item) => ({
+      ...item.item,
+      values: {
+        value: item.item_values.value,
+        stability: item.item_values.stability,
+        demand: item.item_values.demand,
+        rarity: item.item_values.rarity,
+      },
+    }));
+  }
   async create(data: ItemInsertModel): Promise<ItemSelectModel> {
     const result = await this.postgres.insert(item).values(data).returning();
 
