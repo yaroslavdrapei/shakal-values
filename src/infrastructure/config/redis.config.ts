@@ -1,17 +1,9 @@
 import { Configuration, Value } from '@itgorillaz/configify';
-import { IsNumber, IsString } from 'class-validator';
+import { IsString } from 'class-validator';
 
 @Configuration()
 export class RedisConfig {
-  @Value('REDIS_HOST')
+  @Value('REDIS_URL')
   @IsString()
-  public host: string;
-
-  @Value('REDIS_PORT', { parse: parseInt })
-  @IsNumber()
-  public port: number;
-
-  @Value('REDIS_PASSWORD')
-  @IsString()
-  public password: string;
+  public url: string;
 }

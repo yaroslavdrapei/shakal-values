@@ -11,11 +11,7 @@ import { RedisConfig } from '../config/redis.config';
       provide: REDIS_CLIENT,
       inject: [RedisConfig],
       useFactory: (config: RedisConfig) => {
-        return new Redis({
-          host: config.host,
-          port: config.port,
-          password: config.password,
-        });
+        return new Redis(config.url);
       },
     },
     RedisService,
