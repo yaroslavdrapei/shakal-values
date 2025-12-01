@@ -1,4 +1,10 @@
-import { inArray, InferInsertModel, InferSelectModel } from 'drizzle-orm';
+import {
+  inArray,
+  InferInsertModel,
+  InferSelectModel,
+  ilike,
+  or,
+} from 'drizzle-orm';
 import { PostgresDatabase } from '../drizzle.types';
 import { item, itemValues } from '../schema';
 import { eq, and } from 'drizzle-orm';
@@ -84,6 +90,52 @@ export class ItemRepo {
         rarity: item.item_values.rarity,
       },
     }));
+  }
+
+  async findByNamesFuzzy(
+    searchTerms: string[],
+  ): Promise<ItemWithValuesSelectModel[]> {
+    if (searchTerms.length === 0) return [];
+
+    const conditions = searchTerms.flatMap((term) => {
+      const normalizedTerm = term.trim();
+      return [
+        ilike(item.name, normalizedTerm),
+        ilike(item.name, `${normalizedTerm}%`),
+        ilike(item.name, `%${normalizedTerm}%`),
+      ];
+    });
+
+    const result = await this.postgres
+      .select()
+      .from(item)
+      .where(or(...conditions))
+      .innerJoin(
+        itemValues,
+        and(
+          eq(item.id, itemValues.itemId),
+          eq(itemValues.source, ItemSource.SUPREME),
+        ),
+      );
+
+    const itemMap = new Map<string, ItemWithValuesSelectModel>();
+
+    result.forEach((row) => {
+      const itemName = row.item.name.toLowerCase();
+      if (!itemMap.has(itemName)) {
+        itemMap.set(itemName, {
+          ...row.item,
+          values: {
+            value: row.item_values.value,
+            stability: row.item_values.stability,
+            demand: row.item_values.demand,
+            rarity: row.item_values.rarity,
+          },
+        });
+      }
+    });
+
+    return Array.from(itemMap.values());
   }
   async create(data: ItemInsertModel): Promise<ItemSelectModel> {
     const result = await this.postgres.insert(item).values(data).returning();

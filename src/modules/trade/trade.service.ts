@@ -6,9 +6,15 @@ import {
 } from '@google/generative-ai';
 import { GeminiConfig } from '@infrastructure/config/gemini.config';
 import { ItemRepo } from '@infrastructure/drizzle/repo/item.repo';
-import { GetItemValuesToolArgs, tools } from './trade.tools';
+import {
+  GetItemValuesToolArgs,
+  tools,
+  askTools,
+  GetItemInfoToolArgs,
+} from './trade.tools';
 import { getItemValuesPrompt, systemPrompt } from './trade.prompts';
 
+// TODO: move gemini to a separate module/service
 @Injectable()
 export class TradeService {
   private genAI: GoogleGenerativeAI;
@@ -79,6 +85,63 @@ export class TradeService {
     }
 
     // Fallback: If AI didn't call tools (e.g., couldn't see items), return its raw text
+    return response.text();
+  }
+
+  async askQuestion(question: string): Promise<string> {
+    this.model = this.genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      tools: askTools,
+      systemInstruction: `You are a helpful MM2 (Murder Mystery 2) trading assistant.
+- When users ask about item values, use the 'get_item_info' tool to fetch current data.
+- Extract item names from the user's question, even if they have typos or use different capitalization.
+- Support multiple items in a single question (e.g., "what's the value of luger and candy").
+- After getting item data, provide a clear response with (each with new line):
+  * Item name
+  * Type: type
+  * Value: value
+  * Stability: stability
+  * Demand: demand 
+  * Rarity: rarity
+- If an item is not found, suggest similar items if available.
+- Use plain text, no markdown formatting.
+- Be conversational and helpful.
+- If user make a typo, like forgot ', then add correct in your opinion spelling to the tool call. Like travelers axe -> traveler's axe, etc.
+- Answer questions only about items and their values/properties in mm2`,
+    });
+
+    const chat = this.model.startChat();
+
+    const result = await chat.sendMessage(question);
+
+    const response = result.response;
+    const toolCalls = response.functionCalls();
+
+    if (toolCalls && toolCalls.length > 0) {
+      const toolResponses: Part[] = [];
+
+      for (const call of toolCalls) {
+        if (call.name === 'get_item_info') {
+          const args = call.args as unknown as GetItemInfoToolArgs;
+
+          const dbData = await this.itemRepo.findByNamesFuzzy(args.items);
+
+          toolResponses.push({
+            functionResponse: {
+              name: 'get_item_info',
+              response: {
+                data: dbData,
+                searchTerms: args.items,
+              },
+            },
+          });
+        }
+      }
+
+      const finalResult = await chat.sendMessage(toolResponses);
+      return finalResult.response.text();
+    }
+
     return response.text();
   }
 }

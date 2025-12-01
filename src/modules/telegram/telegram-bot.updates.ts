@@ -92,6 +92,39 @@ export class TelegramBotUpdates {
     await ctx.reply(statusText);
   }
 
+  @Command('ask')
+  async ask(@Ctx() ctx: Context) {
+    if (!ctx.from || !ctx.message) return;
+
+    const messageText = 'text' in ctx.message ? ctx.message.text : '';
+    const question = messageText.replace(/^\/ask\s*/i, '').trim();
+
+    if (!question) {
+      await ctx.reply(
+        'Please ask a question about MM2 items. For example:\n' +
+          "• /ask what's the value of luger\n" +
+          '• /ask tell me about candy and chroma\n' +
+          '• /ask luger value',
+      );
+      return;
+    }
+
+    await ctx.reply('Let me look that up for you...');
+
+    try {
+      const result = await this.tradeService.askQuestion(question);
+      await ctx.reply(result);
+    } catch (error) {
+      this.logger.error(
+        `Error processing ask question: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      await ctx.reply(
+        'Sorry, I encountered an error while processing your question. Please try again.',
+      );
+    }
+  }
+
   @Command('help')
   async help(@Ctx() ctx: Context) {
     await ctx.reply(
@@ -99,6 +132,7 @@ export class TelegramBotUpdates {
 /sub - Subscribe to updates
 /unsub - Unsubscribe from updates
 /status - Check your subscription status
+/ask - Ask about item values (e.g., "/ask what's the value of luger")
 /help - Show this help message`,
     );
   }
