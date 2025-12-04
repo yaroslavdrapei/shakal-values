@@ -1,25 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Command, Ctx, On, Update } from 'nestjs-telegraf';
-import { Context } from 'telegraf';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { TelegramSubscriberRepo } from '@infrastructure/drizzle/repo/telegram-subscriber.repo';
 import { TradeService } from '@modules/trade/trade.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { Context } from 'telegraf';
 
-// TODO: use upsert everywhere ???
-@Update()
 @Injectable()
-export class TelegramBotUpdates {
-  private readonly logger = new Logger(TelegramBotUpdates.name);
+export class TelegramTextService {
+  private readonly logger = new Logger(TelegramTextService.name);
 
   constructor(
     private readonly telegramSubscriberRepo: TelegramSubscriberRepo,
-    private readonly httpService: HttpService,
     private readonly tradeService: TradeService,
   ) {}
 
-  @Command('start')
-  async start(@Ctx() ctx: Context) {
+  async start(ctx: Context) {
     if (!ctx.from) return;
 
     const chatId = ctx.from.id;
@@ -42,8 +35,7 @@ export class TelegramBotUpdates {
     );
   }
 
-  @Command('sub')
-  async subscribe(@Ctx() ctx: Context) {
+  async subscribe(ctx: Context) {
     if (!ctx.from) return;
 
     const chatId = ctx.from.id;
@@ -55,8 +47,7 @@ export class TelegramBotUpdates {
     await ctx.reply(`You've subscribed to updates`);
   }
 
-  @Command('unsub')
-  async unsubscribe(@Ctx() ctx: Context) {
+  async unsubscribe(ctx: Context) {
     if (!ctx.from) return;
 
     const chatId = ctx.from.id;
@@ -68,8 +59,7 @@ export class TelegramBotUpdates {
     await ctx.reply(`You've unsubscribed from updates`);
   }
 
-  @Command('status')
-  async status(@Ctx() ctx: Context) {
+  async status(ctx: Context) {
     if (!ctx.from) return;
 
     const chatId = ctx.from.id;
@@ -92,8 +82,7 @@ export class TelegramBotUpdates {
     await ctx.reply(statusText);
   }
 
-  @Command('ask')
-  async ask(@Ctx() ctx: Context) {
+  async ask(ctx: Context) {
     if (!ctx.from || !ctx.message) return;
 
     const messageText = 'text' in ctx.message ? ctx.message.text : '';
@@ -122,54 +111,6 @@ export class TelegramBotUpdates {
       await ctx.reply(
         'Sorry, I encountered an error while processing your question. Please try again.',
       );
-    }
-  }
-
-  @Command('help')
-  async help(@Ctx() ctx: Context) {
-    await ctx.reply(
-      `/start - Start the bot
-/sub - Subscribe to updates
-/unsub - Unsubscribe from updates
-/status - Check your subscription status
-/ask - Ask about item values (e.g., "/ask what's the value of luger")
-/help - Show this help message`,
-    );
-  }
-
-  @On('photo')
-  async handleTradeImage(@Ctx() ctx: Context) {
-    if (!ctx.from || !ctx.message) return;
-
-    if ('photo' in ctx.message && ctx.message.photo) {
-      const photo = ctx.message.photo;
-      const largestPhoto = photo[photo.length - 1];
-
-      await ctx.reply('Processing your trade image...');
-
-      try {
-        const fileLink = await ctx.telegram.getFileLink(largestPhoto.file_id);
-
-        const response = await firstValueFrom(
-          this.httpService.get(fileLink.toString(), {
-            responseType: 'arraybuffer',
-          }),
-        );
-
-        const imageBuffer = Buffer.from(response.data);
-        const base64Image = imageBuffer.toString('base64');
-
-        const result = await this.tradeService.evaluateTrade(base64Image);
-
-        await ctx.reply(result);
-      } catch (error) {
-        this.logger.error(
-          `Error processing trade image: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        await ctx.reply(
-          'Sorry, I encountered an error while processing your trade image. Please try again',
-        );
-      }
     }
   }
 }

@@ -71,7 +71,7 @@ export class TasksService {
 
     await this.redisService.set(`change-log-hash-supreme`, newHash);
 
-    await this.telegramBotService.sendMessage(
+    await this.telegramBotService.notifySubscribers(
       'Values have been updated! Check out the website for the latest information',
     );
   }
