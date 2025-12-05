@@ -11,10 +11,19 @@ import {
   tools,
   askTools,
   GetItemInfoToolArgs,
+  inventoryTools,
+  GetItemInventoryToolArgs,
 } from './trade.tools';
-import { getItemValuesPrompt, systemPrompt } from './trade.prompts';
+import {
+  getItemValuesPrompt,
+  inventoryPrompt,
+  inventorySystemPrompt,
+  systemPrompt,
+} from './trade.prompts';
+import { stringToNumber } from '@shared/utils/string-to-number.util';
 
 // TODO: move gemini to a separate module/service
+// TODO: make tools services for better separation of concerns
 @Injectable()
 export class TradeService {
   private genAI: GoogleGenerativeAI;
@@ -54,6 +63,8 @@ export class TradeService {
     const response = result.response;
     const toolCalls = response.functionCalls();
 
+    console.log(JSON.stringify(toolCalls, null, 2));
+
     // 4. Handle Tool Calls (if any)
     if (toolCalls && toolCalls.length > 0) {
       // We use the 'Part' type from the SDK to ensure type safety for the response
@@ -65,6 +76,8 @@ export class TradeService {
           const args = call.args as unknown as GetItemValuesToolArgs;
 
           const dbData = await this.itemRepo.findByNames(args.items);
+
+          console.log(dbData);
 
           toolResponses.push({
             functionResponse: {
@@ -139,6 +152,70 @@ meaning make request with both "c." and "chroma" when you pass that in a tool ca
               response: {
                 data: dbData,
                 searchTerms: args.items,
+              },
+            },
+          });
+        }
+      }
+
+      const finalResult = await chat.sendMessage(toolResponses);
+      return finalResult.response.text();
+    }
+
+    return response.text();
+  }
+
+  async calculateInventoryTotalValue(base64Image: string) {
+    this.model = this.genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      tools: inventoryTools,
+      systemInstruction: inventorySystemPrompt,
+    });
+
+    const chat = this.model.startChat();
+
+    const cleanImage = base64Image.replace(/^data:image\/\w+;base64,/, '');
+
+    const result = await chat.sendMessage([
+      {
+        text: inventoryPrompt,
+      },
+      { inlineData: { mimeType: 'image/jpeg', data: cleanImage } },
+    ]);
+
+    const response = result.response;
+    const toolCalls = response.functionCalls();
+
+    if (toolCalls && toolCalls.length > 0) {
+      const toolResponses: Part[] = [];
+
+      for (const call of toolCalls) {
+        if (call.name === 'get_inventory_items') {
+          const args = call.args as unknown as GetItemInventoryToolArgs;
+
+          let totalValue = 0;
+          const itemData: { name: string; count: number; value: number }[] = [];
+          for (const aiItem of args.items) {
+            const item = await this.itemRepo.findByName(aiItem.name);
+            if (!item) continue;
+
+            const normalizedValue = stringToNumber(item.values.value);
+            const localValue = normalizedValue * aiItem.count;
+            totalValue += localValue;
+
+            itemData.push({
+              name: aiItem.name,
+              count: aiItem.count,
+              value: localValue,
+            });
+          }
+
+          toolResponses.push({
+            functionResponse: {
+              name: 'get_inventory_items',
+              response: {
+                totalValue,
+                items: itemData,
               },
             },
           });

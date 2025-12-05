@@ -31,6 +31,25 @@ export class TelegramPhotoService {
     }
   }
 
+  async handleInventoryImage(ctx: PhotoContext) {
+    await ctx.reply('Processing your inventory image...');
+
+    const imageBuffer = await this.getImageBuffer(ctx);
+    const base64Image = imageBuffer.toString('base64');
+
+    try {
+      const result =
+        await this.tradeService.calculateInventoryTotalValue(base64Image);
+
+      await ctx.reply(result);
+    } catch (error) {
+      this.logger.error(`Error processing inventory image: ${String(error)}`);
+      await ctx.reply(
+        'Sorry, I encountered an error while processing your inventory image. Please try again',
+      );
+    }
+  }
+
   private async getImageBuffer(ctx: PhotoContext): Promise<Buffer> {
     const photo = ctx.message.photo;
     const largestPhoto = photo[photo.length - 1];

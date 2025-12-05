@@ -61,6 +61,9 @@ export class TelegramBotUpdates {
       case '/trade':
         await this.telegramPhotoService.handleTradeImage(ctx);
         break;
+      case '/inv':
+        await this.telegramPhotoService.handleInventoryImage(ctx);
+        break;
       default:
         return;
     }

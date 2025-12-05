@@ -60,3 +60,45 @@ export const askTools: Tool[] = [
 export interface GetItemInfoToolArgs {
   items: string[];
 }
+
+export const inventoryTools: Tool[] = [
+  {
+    functionDeclarations: [
+      {
+        name: 'get_inventory_items',
+        description:
+          'Get the value and information for specific MM2 items with their counts. Use this to look up items found in the inventory image.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            items: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  name: {
+                    type: SchemaType.STRING,
+                    description:
+                      'The exact item name (e.g., "Luger", "Candy", "Chroma Darkbringer")',
+                  },
+                  count: {
+                    type: SchemaType.NUMBER,
+                    description:
+                      'How many times this item appears in the inventory',
+                  },
+                },
+                required: ['name', 'count'],
+              },
+              description:
+                'List of items found in the inventory with their counts. Each item should include both the name and how many times it appears.',
+            },
+          },
+          required: ['items'],
+        },
+      },
+    ],
+  },
+];
+export interface GetItemInventoryToolArgs {
+  items: { name: string; count: number }[];
+}
