@@ -47,7 +47,9 @@ export class TelegramBotUpdates {
 /unsub - Unsubscribe from updates
 /status - Check your subscription status
 /ask - Ask about item values (e.g., "/ask what's the value of luger")
-/help - Show this help message`,
+/help - Show this help message
+/trade - AI evaluation of your trade (attach screenshot)
+/inv - AI calculation of total inventory value (attach screenshot)`,
     );
   }
 
