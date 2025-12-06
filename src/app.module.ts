@@ -7,9 +7,11 @@ import { MapperModule } from '@modules/mapper/mapper.module';
 import { ScraperModule } from '@modules/scraper/scraper.module';
 import { CronModule } from '@modules/cron/cron.module';
 import { TelegramModule } from '@modules/telegram/telegram.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule,
     DrizzleModule,
     RedisModule,

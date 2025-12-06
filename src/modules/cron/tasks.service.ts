@@ -2,9 +2,10 @@ import { ItemValuesRepo } from '@infrastructure/drizzle/repo/item-values.repo';
 import { RedisService } from '@infrastructure/redis/redis.service';
 import { ItemService } from '@modules/item/item.service';
 import { ScraperService } from '@modules/scraper/scraper.service';
-import { TelegramBotService } from '@modules/telegram/telegram-bot.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Events } from '@shared/enums';
 import { hashString } from '@shared/utils/hash.util';
 
 @Injectable()
@@ -15,7 +16,7 @@ export class TasksService {
     private readonly itemService: ItemService,
     private readonly itemValuesRepo: ItemValuesRepo,
     private readonly redisService: RedisService,
-    private readonly telegramBotService: TelegramBotService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)
@@ -70,9 +71,6 @@ export class TasksService {
     this.logger.log(`Failed to update items: ${failedItems}`);
 
     await this.redisService.set(`change-log-hash-supreme`, newHash);
-
-    await this.telegramBotService.notifySubscribers(
-      'Values have been updated! Check out the website for the latest information',
-    );
+    this.eventEmitter.emit(Events.ITEMS_UPDATED);
   }
 }
