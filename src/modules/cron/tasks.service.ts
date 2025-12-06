@@ -1,6 +1,6 @@
 import { ItemValuesRepo } from '@infrastructure/drizzle/repo/item-values.repo';
-import { ItemRepo } from '@infrastructure/drizzle/repo/item.repo';
 import { RedisService } from '@infrastructure/redis/redis.service';
+import { ItemService } from '@modules/item/item.service';
 import { ScraperService } from '@modules/scraper/scraper.service';
 import { TelegramBotService } from '@modules/telegram/telegram-bot.service';
 import { Injectable, Logger } from '@nestjs/common';
@@ -12,7 +12,7 @@ export class TasksService {
   private readonly logger = new Logger(TasksService.name);
   constructor(
     private readonly scraperService: ScraperService,
-    private readonly itemRepo: ItemRepo,
+    private readonly itemService: ItemService,
     private readonly itemValuesRepo: ItemValuesRepo,
     private readonly redisService: RedisService,
     private readonly telegramBotService: TelegramBotService,
@@ -33,7 +33,7 @@ export class TasksService {
 
     this.logger.log('Changed detected, start scraping');
 
-    const existingItems = await this.itemRepo.findAllWithValues();
+    const existingItems = await this.itemService.findAllWithValues();
     this.logger.log(`Found ${existingItems.length} existing items`);
 
     const newItems = await this.scraperService.getItems();
@@ -71,7 +71,7 @@ export class TasksService {
 
     await this.redisService.set(`change-log-hash-supreme`, newHash);
 
-    await this.telegramBotService.sendMessage(
+    await this.telegramBotService.notifySubscribers(
       'Values have been updated! Check out the website for the latest information',
     );
   }

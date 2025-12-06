@@ -1,11 +1,12 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { HttpModule } from '@nestjs/axios';
 import { TelegramConfig } from '@infrastructure/config/telegram.config';
 import { TelegramBotService } from './telegram-bot.service';
-import { TelegramBotUpdates } from './telegram-bot.updates';
-import { DrizzleModule } from '@infrastructure/drizzle/drizzle.module';
-import { TradeModule } from '@modules/trade/trade.module';
+import { TelegramBotUpdates } from './telegram.updates';
+import { TelegramPhotoService } from './telegram-photo.service';
+import { TelegramTextService } from './telegram-text.service';
+import { AiModule } from '@modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -16,10 +17,14 @@ import { TradeModule } from '@modules/trade/trade.module';
       }),
     }),
     HttpModule,
-    DrizzleModule,
-    TradeModule,
+    forwardRef(() => AiModule),
   ],
-  providers: [TelegramBotService, TelegramBotUpdates],
-  exports: [TelegramBotService],
+  providers: [
+    TelegramBotService,
+    TelegramBotUpdates,
+    TelegramPhotoService,
+    TelegramTextService,
+  ],
+  exports: [TelegramBotService, TelegramPhotoService, TelegramTextService],
 })
 export class TelegramModule {}

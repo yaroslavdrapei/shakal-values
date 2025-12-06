@@ -1,9 +1,9 @@
 import {
-  inArray,
   InferInsertModel,
   InferSelectModel,
   ilike,
   or,
+  sql,
 } from 'drizzle-orm';
 import { PostgresDatabase } from '../drizzle.types';
 import { item, itemValues } from '../schema';
@@ -68,11 +68,37 @@ export class ItemRepo {
     return result[0] ?? null;
   }
 
+  async findByName(name: string): Promise<ItemWithValuesSelectModel | null> {
+    const result = await this.postgres
+      .select()
+      .from(item)
+      .where(sql`LOWER(${item.name}) = LOWER(${name})`)
+      .innerJoin(
+        itemValues,
+        and(
+          eq(item.id, itemValues.itemId),
+          eq(itemValues.source, ItemSource.SUPREME),
+        ),
+      );
+
+    return result[0]
+      ? {
+          ...result[0].item,
+          values: { ...result[0].item_values },
+        }
+      : null;
+  }
+
   async findByNames(names: string[]): Promise<ItemWithValuesSelectModel[]> {
     const result = await this.postgres
       .select()
       .from(item)
-      .where(inArray(item.name, names))
+      .where(
+        sql`LOWER(${item.name}) IN (${sql.join(
+          names.map((name) => sql`LOWER(${name})`),
+          sql`, `,
+        )})`,
+      )
       .innerJoin(
         itemValues,
         and(

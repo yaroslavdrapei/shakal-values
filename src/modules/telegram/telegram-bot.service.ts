@@ -13,7 +13,7 @@ export class TelegramBotService {
     private readonly telegramSubscriberRepo: TelegramSubscriberRepo,
   ) {}
 
-  async sendMessage(message: string): Promise<void> {
+  async notifySubscribers(message: string): Promise<void> {
     const subscribers = await this.telegramSubscriberRepo.findAllSubscribed();
 
     for (const subscriber of subscribers) {
@@ -21,7 +21,7 @@ export class TelegramBotService {
         await this.bot.telegram.sendMessage(subscriber.chatId, message);
       } catch (error) {
         this.logger.error(
-          `Failed to send message to chatId ${subscriber.chatId}: ${error}`,
+          `Failed to send message to chatId ${subscriber.chatId}: ${String(error)}`,
         );
       }
     }
