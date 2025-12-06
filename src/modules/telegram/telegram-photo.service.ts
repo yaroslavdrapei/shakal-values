@@ -1,8 +1,9 @@
 import { HttpService } from '@nestjs/axios';
 import { PhotoContext } from './telegram.types';
 import { Injectable, Logger } from '@nestjs/common';
-import { TradeService } from '@modules/trade/trade.service';
 import { firstValueFrom } from 'rxjs';
+import { InvService } from '@modules/ai/inv/inv.service';
+import { TradeService } from '@modules/ai/trade/trade.service';
 
 @Injectable()
 export class TelegramPhotoService {
@@ -11,6 +12,7 @@ export class TelegramPhotoService {
   constructor(
     private readonly httpService: HttpService,
     private readonly tradeService: TradeService,
+    private readonly invService: InvService,
   ) {}
 
   async handleTradeImage(ctx: PhotoContext) {
@@ -39,7 +41,7 @@ export class TelegramPhotoService {
 
     try {
       const result =
-        await this.tradeService.calculateInventoryTotalValue(base64Image);
+        await this.invService.calculateInventoryTotalValue(base64Image);
 
       await ctx.reply(result);
     } catch (error) {

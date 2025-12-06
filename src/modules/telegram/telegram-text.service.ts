@@ -1,5 +1,5 @@
 import { TelegramSubscriberRepo } from '@infrastructure/drizzle/repo/telegram-subscriber.repo';
-import { TradeService } from '@modules/trade/trade.service';
+import { AskService } from '@modules/ai/ask/ask.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { Context } from 'telegraf';
 
@@ -9,7 +9,7 @@ export class TelegramTextService {
 
   constructor(
     private readonly telegramSubscriberRepo: TelegramSubscriberRepo,
-    private readonly tradeService: TradeService,
+    private readonly askService: AskService,
   ) {}
 
   async start(ctx: Context) {
@@ -101,7 +101,7 @@ export class TelegramTextService {
     await ctx.reply('Let me look that up for you...');
 
     try {
-      const result = await this.tradeService.askQuestion(question);
+      const result = await this.askService.askQuestion(question);
       await ctx.reply(result);
     } catch (error) {
       this.logger.error(
