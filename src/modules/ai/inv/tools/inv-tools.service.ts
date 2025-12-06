@@ -1,14 +1,14 @@
-import { ItemRepo } from '@infrastructure/drizzle/repo/item.repo';
 import { Injectable } from '@nestjs/common';
 import {
   GetInventoryItemsToolArgs,
   GetInventoryItemsToolResponse,
 } from './inv.tools';
 import { stringToNumber } from '@shared/utils/string-to-number.util';
+import { ItemService } from '@modules/item/item.service';
 
 @Injectable()
 export class InvToolsService {
-  constructor(private readonly itemRepo: ItemRepo) {}
+  constructor(private readonly itemService: ItemService) {}
 
   async getInventoryItems({
     items,
@@ -17,7 +17,7 @@ export class InvToolsService {
     const itemData: GetInventoryItemsToolResponse['itemsData'] = [];
 
     for (const aiItem of items) {
-      const item = await this.itemRepo.findByName(aiItem.name);
+      const item = await this.itemService.findByName(aiItem.name);
       if (!item) continue;
 
       const normalizedValue = stringToNumber(item.values.value);
