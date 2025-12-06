@@ -152,25 +152,16 @@ export class ItemRepo {
         ),
       );
 
-    const itemMap = new Map<string, ItemWithValuesSelectModel>();
-
-    result.forEach((row) => {
-      const itemName = row.item.name.toLowerCase();
-      if (!itemMap.has(itemName)) {
-        itemMap.set(itemName, {
-          ...row.item,
-          values: {
-            value: row.item_values.value,
-            stability: row.item_values.stability,
-            demand: row.item_values.demand,
-            rarity: row.item_values.rarity,
-            rangedValue: row.item_values.rangedValue,
-          },
-        });
-      }
-    });
-
-    return Array.from(itemMap.values());
+    return result.map((item) => ({
+      ...item.item,
+      values: {
+        value: item.item_values.value,
+        stability: item.item_values.stability,
+        demand: item.item_values.demand,
+        rarity: item.item_values.rarity,
+        rangedValue: item.item_values.rangedValue,
+      },
+    }));
   }
   async create(data: ItemInsertModel): Promise<ItemSelectModel> {
     const result = await this.postgres.insert(item).values(data).returning();
