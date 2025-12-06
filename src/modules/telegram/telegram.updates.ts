@@ -70,4 +70,17 @@ export class TelegramBotUpdates {
         return;
     }
   }
+
+  // those are for help purposes, real handling is in @On('photo')
+  @Command('trade')
+  async trade(@Ctx() ctx: Context) {
+    await ctx.reply('Send a screenshot of your trade along with the command');
+  }
+
+  @Command('inv')
+  async inv(@Ctx() ctx: Context) {
+    await ctx.reply(
+      'Send a screenshot of your inventory along with the command',
+    );
+  }
 }
