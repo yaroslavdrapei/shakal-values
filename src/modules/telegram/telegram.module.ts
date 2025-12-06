@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { HttpModule } from '@nestjs/axios';
 import { TelegramConfig } from '@infrastructure/config/telegram.config';
@@ -17,7 +17,7 @@ import { AiModule } from '@modules/ai/ai.module';
       }),
     }),
     HttpModule,
-    forwardRef(() => AiModule),
+    AiModule,
   ],
   providers: [
     TelegramBotService,
