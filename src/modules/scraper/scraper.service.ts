@@ -22,8 +22,6 @@ export class ScraperService {
   ) {}
 
   public async getChangeLog(): Promise<string> {
-    let html: string;
-
     try {
       const observable = this.httpService.get<string>('').pipe(
         timeout(30000),
@@ -38,21 +36,11 @@ export class ScraperService {
         }),
       );
       const response = await firstValueFrom(observable);
-      html = response.data;
+      return response.data;
     } catch (e) {
-      this.logger.error(`Error while trying to get change log: \n${e}`);
+      this.logger.error(`Error while trying to get change log: \n${String(e)}`);
       throw new BadRequestException('Error while trying to get change log');
     }
-
-    const document = new JSDOM(html).window.document;
-    const data = document.querySelectorAll('.footertext')[0]?.textContent;
-
-    if (!data) {
-      this.logger.error('Failed to make a jsdom query');
-      throw new BadRequestException('Bad input data');
-    }
-
-    return this.prettifyData(data);
   }
 
   public async getItems(): Promise<FoundItem[]> {
@@ -68,7 +56,7 @@ export class ScraperService {
       this.logger.log(`Total valid items: ${items.length}`);
       return items;
     } catch (e) {
-      this.logger.error(`Error while trying to get items: \n${e}`);
+      this.logger.error(`Error while trying to get items: \n${String(e)}`);
       throw new BadRequestException('Error while trying to get items');
     }
   }
