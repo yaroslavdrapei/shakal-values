@@ -1,5 +1,7 @@
 import { TelegramSubscriberRepo } from '@infrastructure/drizzle/repo/telegram-subscriber.repo';
 import { AskService } from '@modules/ai/ask/ask.service';
+import { MetricsService } from '@modules/metrics/metrics.service';
+import { FeatureUsage, MetricSource } from '@modules/metrics/metrics.enums';
 import { Injectable, Logger } from '@nestjs/common';
 import { Context } from 'telegraf';
 
@@ -10,6 +12,7 @@ export class TelegramTextService {
   constructor(
     private readonly telegramSubscriberRepo: TelegramSubscriberRepo,
     private readonly askService: AskService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async start(ctx: Context) {
@@ -103,6 +106,16 @@ export class TelegramTextService {
     try {
       const result = await this.askService.askQuestion(question);
       await ctx.reply(result);
+      await this.metricsService.createFeatureUsageMetric({
+        feature: FeatureUsage.ASK,
+        success: true,
+        source: MetricSource.TELEGRAM,
+        chatId: ctx.from.id,
+        metadata: {
+          question,
+          answer: result,
+        },
+      });
     } catch (error) {
       this.logger.error(
         `Error processing ask question: ${error instanceof Error ? error.message : String(error)}`,
@@ -111,6 +124,16 @@ export class TelegramTextService {
       await ctx.reply(
         'Sorry, I encountered an error while processing your question. Please try again.',
       );
+      await this.metricsService.createFeatureUsageMetric({
+        feature: FeatureUsage.ASK,
+        success: false,
+        source: MetricSource.TELEGRAM,
+        chatId: ctx.from.id,
+        metadata: {
+          question,
+          error,
+        },
+      });
     }
   }
 }

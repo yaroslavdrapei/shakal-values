@@ -13,8 +13,14 @@ import { PostgresDatabase } from './drizzle.types';
 import { ItemRepo } from './repo/item.repo';
 import { ItemValuesRepo } from './repo/item-values.repo';
 import { TelegramSubscriberRepo } from './repo/telegram-subscriber.repo';
+import { MetricsFeatureUsageRepo } from './repo/metrics-feature-usage.repo';
 
-const repos = [ItemRepo, ItemValuesRepo, TelegramSubscriberRepo];
+const repos = [
+  ItemRepo,
+  ItemValuesRepo,
+  TelegramSubscriberRepo,
+  MetricsFeatureUsageRepo,
+];
 
 @Global()
 @Module({

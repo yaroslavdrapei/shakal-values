@@ -1,10 +1,12 @@
-import { ItemValuesRepo } from '@infrastructure/drizzle/repo/item-values.repo';
 import { RedisService } from '@infrastructure/redis/redis.service';
-import { ItemService } from '@modules/item/item.service';
+import { ItemCachableService } from '@modules/item/services/item-cachable.service';
 import { ScraperService } from '@modules/scraper/scraper.service';
-import { TelegramBotService } from '@modules/telegram/telegram-bot.service';
-import { Injectable, Logger } from '@nestjs/common';
+import { MetricsService } from '@modules/metrics/metrics.service';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Events, RedisKeys } from '@shared/enums';
 import { hashString } from '@shared/utils/hash.util';
 
 @Injectable()
@@ -12,10 +14,11 @@ export class TasksService {
   private readonly logger = new Logger(TasksService.name);
   constructor(
     private readonly scraperService: ScraperService,
-    private readonly itemService: ItemService,
-    private readonly itemValuesRepo: ItemValuesRepo,
+    private readonly itemCachableService: ItemCachableService,
     private readonly redisService: RedisService,
-    private readonly telegramBotService: TelegramBotService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly metricsService: MetricsService,
+    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
   ) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)
@@ -25,7 +28,10 @@ export class TasksService {
     const newChangeLog = await this.scraperService.getChangeLog();
     const newHash = hashString(newChangeLog);
 
-    const oldHash = await this.redisService.get(`change-log-hash-supreme`);
+    const oldHash = await this.redisService.get(
+      RedisKeys.CHANGE_LOG_HASH_SUPREME,
+    );
+
     if (oldHash === newHash) {
       this.logger.log('No changes detected, skip scraping');
       return;
@@ -33,7 +39,7 @@ export class TasksService {
 
     this.logger.log('Changed detected, start scraping');
 
-    const existingItems = await this.itemService.findAllWithValues();
+    const existingItems = await this.itemCachableService.findAllWithValues();
     this.logger.log(`Found ${existingItems.length} existing items`);
 
     const newItems = await this.scraperService.getItems();
@@ -51,12 +57,16 @@ export class TasksService {
       );
 
       if (existingItem) {
-        await this.itemValuesRepo.updateByItemId(existingItem.id, {
-          value: newItem.value,
-          stability: newItem.stability,
-          demand: newItem.demand,
-          rarity: newItem.rarity,
-        });
+        await this.itemCachableService.updateItemValuesByItemId(
+          existingItem.id,
+          {
+            value: newItem.value,
+            stability: newItem.stability,
+            demand: newItem.demand,
+            rarity: newItem.rarity,
+            rangedValue: newItem.rangedValue,
+          },
+        );
         updatedItems++;
       } else {
         this.logger.warn(
@@ -67,12 +77,22 @@ export class TasksService {
     }
 
     this.logger.log(`Updated items: ${updatedItems}`);
-    this.logger.log(`Failed to update items: ${failedItems}`);
+    if (failedItems > 0) {
+      this.logger.warn(`Failed to update items: ${failedItems}`);
+    }
 
-    await this.redisService.set(`change-log-hash-supreme`, newHash);
+    await this.redisService.set(RedisKeys.CHANGE_LOG_HASH_SUPREME, newHash);
 
-    await this.telegramBotService.notifySubscribers(
-      'Values have been updated! Check out the website for the latest information',
-    );
+    // clear cache so next time we can get the latest items
+    await this.cacheService.del(RedisKeys.ITEMS_WITH_VALUES_SUPREME);
+    this.eventEmitter.emit(Events.ITEMS_UPDATED);
+  }
+
+  @Cron(CronExpression.EVERY_6_MONTHS)
+  async deleteOldMetrics() {
+    this.logger.log('Deleting old metrics entries older than 6 months');
+
+    const { deletedCount } = await this.metricsService.deleteOldMetrics(6);
+    this.logger.log(`Deleted ${deletedCount} old metrics entries`);
   }
 }

@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { HttpModule } from '@nestjs/axios';
 import { TelegramConfig } from '@infrastructure/config/telegram.config';
@@ -7,6 +7,7 @@ import { TelegramBotUpdates } from './telegram.updates';
 import { TelegramPhotoService } from './telegram-photo.service';
 import { TelegramTextService } from './telegram-text.service';
 import { AiModule } from '@modules/ai/ai.module';
+import { MetricsModule } from '@modules/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { AiModule } from '@modules/ai/ai.module';
       }),
     }),
     HttpModule,
-    forwardRef(() => AiModule),
+    AiModule,
+    MetricsModule,
   ],
   providers: [
     TelegramBotService,

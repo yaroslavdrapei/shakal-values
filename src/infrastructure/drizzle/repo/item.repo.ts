@@ -22,7 +22,7 @@ export type ItemUpdateModel = Omit<
 export type ItemWithValuesSelectModel = ItemSelectModel & {
   values: Pick<
     ItemValuesSelectModel,
-    'value' | 'stability' | 'demand' | 'rarity'
+    'value' | 'stability' | 'demand' | 'rarity' | 'rangedValue'
   >;
 };
 
@@ -55,6 +55,7 @@ export class ItemRepo {
         stability: item.item_values.stability,
         demand: item.item_values.demand,
         rarity: item.item_values.rarity,
+        rangedValue: item.item_values.rangedValue,
       },
     }));
   }
@@ -84,7 +85,13 @@ export class ItemRepo {
     return result[0]
       ? {
           ...result[0].item,
-          values: { ...result[0].item_values },
+          values: {
+            value: result[0].item_values.value,
+            stability: result[0].item_values.stability,
+            demand: result[0].item_values.demand,
+            rarity: result[0].item_values.rarity,
+            rangedValue: result[0].item_values.rangedValue,
+          },
         }
       : null;
   }
@@ -114,6 +121,7 @@ export class ItemRepo {
         stability: item.item_values.stability,
         demand: item.item_values.demand,
         rarity: item.item_values.rarity,
+        rangedValue: item.item_values.rangedValue,
       },
     }));
   }
@@ -144,24 +152,16 @@ export class ItemRepo {
         ),
       );
 
-    const itemMap = new Map<string, ItemWithValuesSelectModel>();
-
-    result.forEach((row) => {
-      const itemName = row.item.name.toLowerCase();
-      if (!itemMap.has(itemName)) {
-        itemMap.set(itemName, {
-          ...row.item,
-          values: {
-            value: row.item_values.value,
-            stability: row.item_values.stability,
-            demand: row.item_values.demand,
-            rarity: row.item_values.rarity,
-          },
-        });
-      }
-    });
-
-    return Array.from(itemMap.values());
+    return result.map((item) => ({
+      ...item.item,
+      values: {
+        value: item.item_values.value,
+        stability: item.item_values.stability,
+        demand: item.item_values.demand,
+        rarity: item.item_values.rarity,
+        rangedValue: item.item_values.rangedValue,
+      },
+    }));
   }
   async create(data: ItemInsertModel): Promise<ItemSelectModel> {
     const result = await this.postgres.insert(item).values(data).returning();

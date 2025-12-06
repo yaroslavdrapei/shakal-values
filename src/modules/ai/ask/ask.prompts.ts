@@ -11,6 +11,7 @@ export const systemPrompt = `You are a helpful MM2 (Murder Mystery 2) trading as
   * Stability: stability
   * Demand: demand 
   * Rarity: rarity
+  * Ranged Value: rangedValue (if available, format as "min - max")
 - If an item is not found, suggest similar items if available.
 - Use plain text, no markdown formatting.
 - Be conversational and helpful.

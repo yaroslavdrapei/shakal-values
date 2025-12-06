@@ -7,9 +7,18 @@ import { MapperModule } from '@modules/mapper/mapper.module';
 import { ScraperModule } from '@modules/scraper/scraper.module';
 import { CronModule } from '@modules/cron/cron.module';
 import { TelegramModule } from '@modules/telegram/telegram.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { CacheModule } from '@nestjs/cache-manager';
+import { millisecondsInDay } from 'date-fns/constants';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
+    // cache module for in memory caching for now
+    CacheModule.register({
+      isGlobal: true,
+      ttl: millisecondsInDay * 3,
+    }),
     ConfigModule,
     DrizzleModule,
     RedisModule,

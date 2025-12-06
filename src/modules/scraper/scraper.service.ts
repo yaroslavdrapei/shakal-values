@@ -9,6 +9,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, retry, timeout, timer } from 'rxjs';
 import { AxiosError } from 'axios';
+import { stringToNumber } from '@shared/utils/string-to-number.util';
 
 // TODO: refactor this shit
 @Injectable()
@@ -22,8 +23,6 @@ export class ScraperService {
   ) {}
 
   public async getChangeLog(): Promise<string> {
-    let html: string;
-
     try {
       const observable = this.httpService.get<string>('').pipe(
         timeout(30000),
@@ -38,21 +37,11 @@ export class ScraperService {
         }),
       );
       const response = await firstValueFrom(observable);
-      html = response.data;
+      return response.data;
     } catch (e) {
-      this.logger.error(`Error while trying to get change log: \n${e}`);
+      this.logger.error(`Error while trying to get change log: \n${String(e)}`);
       throw new BadRequestException('Error while trying to get change log');
     }
-
-    const document = new JSDOM(html).window.document;
-    const data = document.querySelectorAll('.footertext')[0]?.textContent;
-
-    if (!data) {
-      this.logger.error('Failed to make a jsdom query');
-      throw new BadRequestException('Bad input data');
-    }
-
-    return this.prettifyData(data);
   }
 
   public async getItems(): Promise<FoundItem[]> {
@@ -68,7 +57,7 @@ export class ScraperService {
       this.logger.log(`Total valid items: ${items.length}`);
       return items;
     } catch (e) {
-      this.logger.error(`Error while trying to get items: \n${e}`);
+      this.logger.error(`Error while trying to get items: \n${String(e)}`);
       throw new BadRequestException('Error while trying to get items');
     }
   }
@@ -122,8 +111,8 @@ export class ScraperService {
     return result;
   }
 
-  private getOtherProps(elem: Element): Record<string, string> | null {
-    const result: Record<string, string> = {};
+  private getOtherProps(elem: Element): Record<string, unknown> | null {
+    const result: Record<string, unknown> = {};
     const matrixOfItems: string[][] = elem.textContent
       .split('\n')
       .map((x) => x.trim())
@@ -138,10 +127,12 @@ export class ScraperService {
 
       if (potentialItem[0].toLowerCase() == 'ranged value') {
         if (potentialItem.length == 3) {
-          result['rangedValue'] = `${potentialItem[1]} - ${potentialItem[2]}`;
-        } else {
-          result['rangedValue'] = potentialItem[1];
+          result['rangedValue'] = {
+            min: stringToNumber(potentialItem[1].slice(1)), // skip the '['
+            max: stringToNumber(potentialItem[2].slice(0, -1)), // skip the ']'
+          };
         }
+
         return;
       }
 

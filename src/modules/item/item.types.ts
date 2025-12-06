@@ -8,7 +8,10 @@ export type FoundItem = Pick<
   ItemSelectModel,
   'name' | 'type' | 'origin' | 'class'
 > &
-  Pick<ItemValuesSelectModel, 'value' | 'stability' | 'demand' | 'rarity'>;
+  Pick<
+    ItemValuesSelectModel,
+    'value' | 'stability' | 'demand' | 'rarity' | 'rangedValue'
+  >;
 
 export function isFoundItemTypeGuard(obj: any): obj is FoundItem {
   return (
@@ -21,7 +24,11 @@ export function isFoundItemTypeGuard(obj: any): obj is FoundItem {
     typeof obj.value === 'string' &&
     typeof obj.stability === 'string' &&
     typeof obj.demand === 'string' &&
-    typeof obj.rarity === 'string'
+    typeof obj.rarity === 'string' &&
+    (obj.rangedValue === undefined ||
+      (typeof obj.rangedValue === 'object' &&
+        typeof obj.rangedValue.min === 'number' &&
+        typeof obj.rangedValue.max === 'number'))
   );
 }
 

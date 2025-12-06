@@ -9,9 +9,10 @@ import {
   ItemValuesSelectModel,
   ItemValuesUpdateModel,
 } from '@infrastructure/drizzle/repo/item-values.repo';
+import { IItemService } from './item-service.interface';
 
 @Injectable()
-export class ItemService {
+export class ItemService implements IItemService {
   constructor(
     private readonly itemRepo: ItemRepo,
     private readonly itemValuesRepo: ItemValuesRepo,

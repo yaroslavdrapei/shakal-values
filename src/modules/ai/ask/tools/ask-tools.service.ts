@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GetItemByNameFuzzyToolArgs } from './ask.tools';
-import { ItemService } from '@modules/item/item.service';
+import { ItemService } from '@modules/item/services/item.service';
 
 @Injectable()
 export class AskToolsService {

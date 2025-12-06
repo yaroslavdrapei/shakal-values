@@ -4,6 +4,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { InvService } from '@modules/ai/inv/inv.service';
 import { TradeService } from '@modules/ai/trade/trade.service';
+import { MetricsService } from '@modules/metrics/metrics.service';
+import { FeatureUsage, MetricSource } from '@modules/metrics/metrics.enums';
 
 @Injectable()
 export class TelegramPhotoService {
@@ -13,6 +15,7 @@ export class TelegramPhotoService {
     private readonly httpService: HttpService,
     private readonly tradeService: TradeService,
     private readonly invService: InvService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async handleTradeImage(ctx: PhotoContext) {
@@ -25,11 +28,29 @@ export class TelegramPhotoService {
       const result = await this.tradeService.evaluateTrade(base64Image);
 
       await ctx.reply(result);
+      await this.metricsService.createFeatureUsageMetric({
+        feature: FeatureUsage.TRADE,
+        success: true,
+        source: MetricSource.TELEGRAM,
+        chatId: ctx.from.id,
+        metadata: {
+          answer: result,
+        },
+      });
     } catch (error) {
       this.logger.error(`Error processing trade image: ${String(error)}`);
       await ctx.reply(
         'Sorry, I encountered an error while processing your trade image. Please try again',
       );
+      await this.metricsService.createFeatureUsageMetric({
+        feature: FeatureUsage.TRADE,
+        success: false,
+        source: MetricSource.TELEGRAM,
+        chatId: ctx.from.id,
+        metadata: {
+          error,
+        },
+      });
     }
   }
 
@@ -44,11 +65,29 @@ export class TelegramPhotoService {
         await this.invService.calculateInventoryTotalValue(base64Image);
 
       await ctx.reply(result);
+      await this.metricsService.createFeatureUsageMetric({
+        feature: FeatureUsage.INV,
+        success: true,
+        source: MetricSource.TELEGRAM,
+        chatId: ctx.from.id,
+        metadata: {
+          answer: result,
+        },
+      });
     } catch (error) {
       this.logger.error(`Error processing inventory image: ${String(error)}`);
       await ctx.reply(
         'Sorry, I encountered an error while processing your inventory image. Please try again',
       );
+      await this.metricsService.createFeatureUsageMetric({
+        feature: FeatureUsage.INV,
+        success: false,
+        source: MetricSource.TELEGRAM,
+        chatId: ctx.from.id,
+        metadata: {
+          error,
+        },
+      });
     }
   }
 

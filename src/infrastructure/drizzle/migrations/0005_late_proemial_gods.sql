@@ -1,0 +1,1 @@
+ALTER TABLE "item_values" ADD COLUMN "ranged_value" jsonb;
