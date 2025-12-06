@@ -1,6 +1,7 @@
 import { RedisService } from '@infrastructure/redis/redis.service';
 import { ItemCachableService } from '@modules/item/services/item-cachable.service';
 import { ScraperService } from '@modules/scraper/scraper.service';
+import { MetricsService } from '@modules/metrics/metrics.service';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -16,6 +17,7 @@ export class TasksService {
     private readonly itemCachableService: ItemCachableService,
     private readonly redisService: RedisService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly metricsService: MetricsService,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
   ) {}
 
@@ -83,5 +85,13 @@ export class TasksService {
     // clear cache so next time we can get the latest items
     await this.cacheService.del(RedisKeys.ITEMS_WITH_VALUES_SUPREME);
     this.eventEmitter.emit(Events.ITEMS_UPDATED);
+  }
+
+  @Cron(CronExpression.EVERY_6_MONTHS)
+  async deleteOldMetrics() {
+    this.logger.log('Deleting old metrics entries older than 6 months');
+
+    const deletedCount = await this.metricsService.deleteOldMetrics(6);
+    this.logger.log(`Deleted ${deletedCount} old metrics entries`);
   }
 }

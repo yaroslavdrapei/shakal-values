@@ -7,6 +7,7 @@ import { TelegramBotUpdates } from './telegram.updates';
 import { TelegramPhotoService } from './telegram-photo.service';
 import { TelegramTextService } from './telegram-text.service';
 import { AiModule } from '@modules/ai/ai.module';
+import { MetricsModule } from '@modules/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AiModule } from '@modules/ai/ai.module';
     }),
     HttpModule,
     AiModule,
+    MetricsModule,
   ],
   providers: [
     TelegramBotService,
