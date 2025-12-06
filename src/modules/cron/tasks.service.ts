@@ -64,6 +64,7 @@ export class TasksService {
             stability: newItem.stability,
             demand: newItem.demand,
             rarity: newItem.rarity,
+            rangedValue: newItem.rangedValue,
           },
         );
         updatedItems++;
@@ -91,7 +92,7 @@ export class TasksService {
   async deleteOldMetrics() {
     this.logger.log('Deleting old metrics entries older than 6 months');
 
-    const deletedCount = await this.metricsService.deleteOldMetrics(6);
+    const { deletedCount } = await this.metricsService.deleteOldMetrics(6);
     this.logger.log(`Deleted ${deletedCount} old metrics entries`);
   }
 }

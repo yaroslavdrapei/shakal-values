@@ -1,5 +1,6 @@
 import {
   decimal,
+  jsonb,
   pgEnum,
   pgTable,
   timestamp,
@@ -29,6 +30,7 @@ export const itemValues = pgTable('item_values', {
   stability: itemStability('stability').notNull(),
   demand: decimal('demand', { precision: 10, scale: 2 }).notNull(),
   rarity: decimal('rarity', { precision: 10, scale: 2 }).notNull(),
+  rangedValue: jsonb('ranged_value').$type<{ min: number; max: number }>(),
   source: itemSource('source').notNull(),
 
   createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -16,6 +16,7 @@ export class ItemResponseDto {
   stability: ItemStability | null;
   demand: number | null;
   rarity: number | null;
+  rangedValue: { min: number; max: number } | null;
   source: ItemSource;
   createdAt: string;
   updatedAt: string;

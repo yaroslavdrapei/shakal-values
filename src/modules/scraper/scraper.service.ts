@@ -9,6 +9,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, retry, timeout, timer } from 'rxjs';
 import { AxiosError } from 'axios';
+import { stringToNumber } from '@shared/utils/string-to-number.util';
 
 // TODO: refactor this shit
 @Injectable()
@@ -110,8 +111,8 @@ export class ScraperService {
     return result;
   }
 
-  private getOtherProps(elem: Element): Record<string, string> | null {
-    const result: Record<string, string> = {};
+  private getOtherProps(elem: Element): Record<string, unknown> | null {
+    const result: Record<string, unknown> = {};
     const matrixOfItems: string[][] = elem.textContent
       .split('\n')
       .map((x) => x.trim())
@@ -126,10 +127,12 @@ export class ScraperService {
 
       if (potentialItem[0].toLowerCase() == 'ranged value') {
         if (potentialItem.length == 3) {
-          result['rangedValue'] = `${potentialItem[1]} - ${potentialItem[2]}`;
-        } else {
-          result['rangedValue'] = potentialItem[1];
+          result['rangedValue'] = {
+            min: stringToNumber(potentialItem[1].slice(1)), // skip the '['
+            max: stringToNumber(potentialItem[2].slice(0, -1)), // skip the ']'
+          };
         }
+
         return;
       }
 

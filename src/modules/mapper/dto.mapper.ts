@@ -19,6 +19,7 @@ export class DtoMapper {
       stability: (item.values?.stability as ItemStability) ?? null,
       demand: item.values?.demand ? Number(item.values.demand) : null,
       rarity: item.values?.rarity ? Number(item.values.rarity) : null,
+      rangedValue: item.values?.rangedValue ?? null,
       source: ItemSource.SUPREME,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
